@@ -7,7 +7,11 @@ Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    enabled: true
+    enabled: true,
+    ownerColor: 'yellow',
+    moderatorColor: 'blue',
+    memberColor: 'green',
+    colors: []
   },
   actions: {
     async init ({ commit }) {
@@ -21,16 +25,40 @@ export default new Vuex.Store({
     async setEnabled ({ commit, dispatch }, { enabled }) {
       commit('setEnabled', { enabled })
       dispatch('sendUpdates')
+    },
+    async setOwnerColor ({ commit, dispatch }, { ownerColor }) {
+      commit('setOwnerColor', { ownerColor })
+      dispatch('sendUpdates')
+    },
+    async setModeratorColor ({ commit, dispatch }, { moderatorColor }) {
+      commit('setModeratorColor', { moderatorColor })
+      dispatch('sendUpdates')
+    },
+    async setMemberColor ({ commit, dispatch }, { memberColor }) {
+      commit('setMemberColor', { memberColor })
+      dispatch('sendUpdates')
     }
   },
   mutations: {
     setValues (state, { values }) {
       Object.keys(state).forEach((key) => {
-        state[key] = values[key]
+        const value = values[key]
+        if (typeof value !== 'undefined') {
+          state[key] = values[key]
+        }
       })
     },
     setEnabled (state, { enabled }) {
       state.enabled = enabled
+    },
+    setOwnerColor (state, { ownerColor }) {
+      state.ownerColor = ownerColor
+    },
+    setModeratorColor (state, { moderatorColor }) {
+      state.moderatorColor = moderatorColor
+    },
+    setMemberColor (state, { memberColor }) {
+      state.memberColor = memberColor
     }
   },
   plugins: [

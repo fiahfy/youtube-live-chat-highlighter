@@ -37,29 +37,43 @@ const getState = async () => {
 }
 
 const update = async () => {
+  logger.log('update')
   const state = await getState()
   const messages = Array.from(doc.querySelectorAll('yt-live-chat-text-message-renderer'))
   messages.forEach((message) => {
+    const menu = message.querySelector('#menu')
     message.style.backgroundColor = null
+    menu.style.background = null
     if (!state.enabled) {
       return
     }
     const authorType = message.getAttribute('author-type')
-    if (authorType === 'moderator') {
-      message.style.backgroundColor = 'blue'
-      return
+    switch (true) {
+      case authorType === 'owner' && !!state.ownerColor:
+        message.style.backgroundColor = state.ownerColor
+        menu.style.background = 'none'
+        return
+      case authorType === 'moderator' && !!state.moderatorColor:
+        message.style.backgroundColor = state.moderatorColor
+        menu.style.background = 'none'
+        return
+      case authorType === 'member' && !!state.memberColor:
+        message.style.backgroundColor = state.memberColor
+        menu.style.background = 'none'
+        return
     }
     // const author = message.querySelector('#author-name')
     // if (author.innerText === 'dummy') {
     message.style.backgroundColor = 'gray'
+    menu.style.background = 'none'
     // return
     // }
   })
 }
 
 const proceed = async () => {
+  logger.log('proceed')
   const items = await querySelectorAsync('#items.yt-live-chat-item-list-renderer')
-  console.log(items)
   if (observer2) {
     observer2.disconnect()
   }
@@ -94,7 +108,6 @@ const urlChanged = async (data) => {
   } else if (url.host === 'gaming.youtube.com') {
     doc = document
     const itemList = await querySelectorAsync('#item-list.yt-live-chat-renderer')
-    console.log(itemList)
     if (observer1) {
       observer1.disconnect()
     }
@@ -114,6 +127,7 @@ const stateChanged = async (data) => {
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   const { id, data } = message
+  logger.log('message received: %s', id)
   switch (id) {
     case 'urlChanged':
       urlChanged(data)

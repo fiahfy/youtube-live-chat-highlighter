@@ -5,7 +5,6 @@ import logger from './utils/logger'
 
 logger.log('ready')
 
-let doc
 let observer1
 let observer2
 
@@ -14,7 +13,7 @@ const querySelectorAsync = (selector) => {
     const expireMillis = 5000
     const expire = Date.now() + expireMillis
     const timer = setInterval(() => {
-      const dom = doc.querySelector(selector)
+      const dom = document.querySelector(selector)
       if (dom) {
         if (timer) {
           clearInterval(timer)
@@ -65,7 +64,7 @@ const update = async () => {
 
   const state = await getState()
 
-  const items = Array.from(doc.querySelectorAll('yt-live-chat-text-message-renderer'))
+  const items = Array.from(document.querySelectorAll('yt-live-chat-text-message-renderer'))
   items.forEach((item) => {
     const author = item.querySelector('#author-name')
     const message = item.querySelector('#message')
@@ -96,56 +95,39 @@ const update = async () => {
 const proceed = async () => {
   logger.log('proceed')
 
-  const items = await querySelectorAsync('#items.yt-live-chat-item-list-renderer')
   if (observer2) {
     observer2.disconnect()
   }
+  const items = await querySelectorAsync('#items.yt-live-chat-item-list-renderer')
   observer2 = new MutationObserver(() => {
     update()
   })
   observer2.observe(items, { childList: true })
+  update()
 }
 
-const urlChanged = async (data) => {
-  const urlString = data.url
-  logger.log('url received: %s', urlString)
+const setup = async (urlString) => {
+  logger.log('setup: %s', urlString)
 
   const url = new URL(urlString)
-  if (!url.pathname.match(/^\/channel\/[^/]*\/live$/) && !url.pathname.match(/^\/watch$/)) {
+  if (url.host === 'www.youtube.com' && (url.pathname === '/live_chat_replay' || url.pathname === '/live_chat')) {
+    //
+  } else if (url.host === 'gaming.youtube.com' && (url.pathname === '/watch' || url.pathname.match(/^\/channel\/[^/]*\/live$/))) {
+    //
+  } else {
     logger.log('url not match')
     return
   }
 
-  if (url.host === 'www.youtube.com') {
-    // logger.log('waiting for iframe')
-    // const iframe = await waitIframe()
-    // currentDocument = iframe.contentWindow.document
-    // iframe.addEventListener('DOMNodeRemoved', () => {
-    //   console.log('removed')
-    // })
-    // const observer = new MutationObserver(() => {
-    //   logger.log('observe')
-    //   proceed(currentDocument)
-    // })
-    // observer.observe(iframe, { childList: true })
-  } else if (url.host === 'gaming.youtube.com') {
-    doc = document
-    const itemList = await querySelectorAsync('#item-list.yt-live-chat-renderer')
-    if (observer1) {
-      observer1.disconnect()
-    }
-    observer1 = new MutationObserver(() => {
-      proceed()
-    })
-    observer1.observe(itemList, { childList: true })
-    proceed()
-  } else {
-    logger.log('host not match')
+  if (observer1) {
+    observer1.disconnect()
   }
-}
-
-const stateChanged = async (data) => {
-  update()
+  const itemList = await querySelectorAsync('#item-list.yt-live-chat-renderer')
+  observer1 = new MutationObserver(() => {
+    proceed()
+  })
+  observer1.observe(itemList, { childList: true })
+  proceed()
 }
 
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
@@ -153,10 +135,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
   logger.log('message received: %s', id)
   switch (id) {
     case 'urlChanged':
-      urlChanged(data)
+      setup(data.url)
       break
     case 'stateChanged':
-      stateChanged(data)
+      update()
       break
   }
 })
+
+setup(location.href)

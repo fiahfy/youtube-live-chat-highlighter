@@ -12,6 +12,7 @@
     {
       "run_at": "document_end",
       "matches": ["https://*.youtube.com/*"],
+      "all_frames": true,
       "js": [
         "js/content-scripts.js"
       ]

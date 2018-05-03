@@ -8,6 +8,9 @@ class Logger {
       message += '%o'
       params.unshift(msg)
     }
+    if (process.env.NODE_ENV === 'production') {
+      return
+    }
     console.log(message, ...params)
   }
 }

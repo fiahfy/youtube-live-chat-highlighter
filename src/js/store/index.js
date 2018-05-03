@@ -5,19 +5,25 @@ import storage from '../utils/storage'
 
 Vue.use(Vuex)
 
+export const defaultState = {
+  enabled: true,
+  ownerColor: '#ff9',
+  moderatorColor: '#99f',
+  memberColor: '#9f9',
+  rules: []
+}
+
 export default new Vuex.Store({
   state: {
-    enabled: true,
-    ownerColor: 'yellow',
-    moderatorColor: 'blue',
-    memberColor: 'green',
-    colors: []
+    ...defaultState
   },
   actions: {
     async init ({ commit }) {
       const items = await storage.get('vuex')
-      const values = JSON.parse(items['vuex'])
-      commit('setValues', { values })
+      try {
+        const values = JSON.parse(items['vuex'])
+        commit('setValues', { values })
+      } catch (e) {}
     },
     async sendUpdates () {
       chrome.runtime.sendMessage({})
@@ -59,6 +65,13 @@ export default new Vuex.Store({
     },
     setMemberColor (state, { memberColor }) {
       state.memberColor = memberColor
+    },
+    addRule (state) {
+      const id = Math.max.apply(null, [0, ...state.rules.map((rule) => rule.id)]) + 1
+      state.rules = [
+        ...state.rules,
+        { id }
+      ]
     }
   },
   plugins: [

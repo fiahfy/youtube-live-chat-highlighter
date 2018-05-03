@@ -1,3 +1,5 @@
+import Color from 'color'
+import { defaultState } from './store'
 import storage from './utils/storage'
 import logger from './utils/logger'
 
@@ -32,47 +34,68 @@ const querySelectorAsync = (selector) => {
 
 const getState = async () => {
   const items = await storage.get('vuex')
-  const values = JSON.parse(items['vuex'])
-  return values
+  try {
+    return JSON.parse(items['vuex'])
+  } catch (e) {
+    return defaultState
+  }
+}
+
+const getColor = (authorType, state) => {
+  try {
+    if (!state.enabled) {
+      return null
+    }
+
+    switch (true) {
+      case authorType === 'owner' && !!state.ownerColor:
+        return Color(state.ownerColor)
+      case authorType === 'moderator' && !!state.moderatorColor:
+        return Color(state.moderatorColor)
+      case authorType === 'member' && !!state.memberColor:
+        return Color(state.memberColor)
+    }
+  } catch (e) {}
+
+  return null
 }
 
 const update = async () => {
   logger.log('update')
+
   const state = await getState()
-  const messages = Array.from(doc.querySelectorAll('yt-live-chat-text-message-renderer'))
-  messages.forEach((message) => {
-    const menu = message.querySelector('#menu')
-    message.style.backgroundColor = null
-    menu.style.background = null
-    if (!state.enabled) {
-      return
+
+  const items = Array.from(doc.querySelectorAll('yt-live-chat-text-message-renderer'))
+  items.forEach((item) => {
+    const author = item.querySelector('#author-name')
+    const message = item.querySelector('#message')
+    const menu = item.querySelector('#menu')
+    const authorType = item.getAttribute('author-type')
+
+    const color = getColor(authorType, state)
+    let backgroundColor = null
+    let background = null
+    let textColor = null
+    let hintTextColor = null
+
+    if (color !== null) {
+      backgroundColor = color.rgb().string()
+      background = 'none'
+      const base = color.isLight() ? Color('black') : Color('white')
+      textColor = base.rgb().string()
+      hintTextColor = base.rgb().alpha(0.7).string()
     }
-    const authorType = message.getAttribute('author-type')
-    switch (true) {
-      case authorType === 'owner' && !!state.ownerColor:
-        message.style.backgroundColor = state.ownerColor
-        menu.style.background = 'none'
-        return
-      case authorType === 'moderator' && !!state.moderatorColor:
-        message.style.backgroundColor = state.moderatorColor
-        menu.style.background = 'none'
-        return
-      case authorType === 'member' && !!state.memberColor:
-        message.style.backgroundColor = state.memberColor
-        menu.style.background = 'none'
-        return
-    }
-    // const author = message.querySelector('#author-name')
-    // if (author.innerText === 'dummy') {
-    message.style.backgroundColor = 'gray'
-    menu.style.background = 'none'
-    // return
-    // }
+
+    item.style.backgroundColor = backgroundColor
+    menu.style.background = background
+    author.style.color = hintTextColor
+    message.style.color = textColor
   })
 }
 
 const proceed = async () => {
   logger.log('proceed')
+
   const items = await querySelectorAsync('#items.yt-live-chat-item-list-renderer')
   if (observer2) {
     observer2.disconnect()

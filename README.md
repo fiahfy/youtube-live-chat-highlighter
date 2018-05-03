@@ -1,22 +1,21 @@
-Youtube Live Chat Highlighter
-===========
+# Youtube Live Chat Highlighter
 
-This application is Chrome Extension for highlighting comments on Youtube Live Chat and Youtube Gaming.
+> This application is Chrome Extension for highlighting comments on Youtube Live Chat and Youtube Gaming.
 
-Version
------
-0.0.1
+## Features
+* Highlight owner, moderator and member comments
 
-Feature
------
-* Highlight owner, moderator and any comments
+## Installation
+1. Download `.zip` file from [releases page](https://github.com/fiahfy/youtube-live-chat-highlighter/releases).
+2. Unzip this file.
+3. Open URL `chrome://extensions/` by Google Chrome.
+4. Drag & drop `app` directory.
 
-Install
------
-```
-git clone https://github.com/fiahfy/youtube-live-chat-highlighter.git
-cd youtube-live-chat-highlighter
+## Development
+``` bash
+# install dependencies
 yarn
+
+# watch files changed
+yarn watch
 ```
-* Open URL `chrome://extensions/` by Google Chrome.
-* Drag & drop `app` directory.
